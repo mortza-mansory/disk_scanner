@@ -11,3 +11,6 @@ And anything you request or i find it helpful in future.
 .
 ![Screenshot](screenshots/main_screen.png)
 ![Screenshot](screenshots/final_screen.png)
+
+
+Created for poor people ( like me ) who is busy by mortza mansory.
