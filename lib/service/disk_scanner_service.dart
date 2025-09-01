@@ -1,18 +1,15 @@
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import '../models/folder_info.dart';
 
-// CHANGED: Added userProfilePath to params
 class ScanParams {
   final String path;
   final SendPort sendPort;
-  final String? userProfilePath; // Can be null for sub-scans
+  final String? userProfilePath;
   ScanParams(this.path, this.sendPort, {this.userProfilePath});
 }
 
-// CHANGED: Added userProfilePath as an argument
 Future<int> _scanDirectoryRecursive(
     Directory dir, SendPort sendPort, int sizeThreshold, String? userProfilePath) async {
   int totalSize = 0;
@@ -21,13 +18,14 @@ Future<int> _scanDirectoryRecursive(
       if (entity is File) {
         totalSize += await entity.length();
       } else if (entity is Directory) {
-        // Pass userProfilePath down in the recursion
         totalSize += await _scanDirectoryRecursive(entity, sendPort, sizeThreshold, userProfilePath);
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    sendPort.send({'type': 'error', 'message': 'Cannot access ${dir.path}'});
 
-  // CHANGED: Added a check to exclude the root user profile folder from the results
+  }
+
   if (totalSize > sizeThreshold && dir.path != userProfilePath) {
     sendPort.send({'type': 'result', 'path': dir.path, 'size': totalSize});
   }
@@ -73,7 +71,6 @@ Future<void> scanFoldersIsolate(ScanParams params) async {
 
   int completedDirs = 0;
   for (final dir in topLevelDirsToScan) {
-    // Pass userProfilePath to the recursive function
     await _scanDirectoryRecursive(dir, sendPort, sizeThreshold, userProfilePath);
     completedDirs++;
     final progress = topLevelDirsToScan.isNotEmpty
@@ -103,7 +100,6 @@ class DiskScannerService {
     final completer = Completer<List<FolderInfo>>();
     final receivePort = ReceivePort();
 
-    // For sub-scans, we don't need the user profile exclusion, so we pass null.
     final isolate = await Isolate.spawn(
         scanFoldersIsolate, ScanParams(path, receivePort.sendPort, userProfilePath: null));
 

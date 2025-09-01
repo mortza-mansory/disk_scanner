@@ -1,8 +1,5 @@
-// lib/services/windows_drive_service.dart
-
 import 'dart:io';
 
-// یک کلاس ساده برای نگهداری اطلاعات بازگشتی
 class DriveInfo {
   final double totalGB;
   final double freeGB;
@@ -11,12 +8,10 @@ class DriveInfo {
 
 class WindowsDriveService {
   static Future<DriveInfo?> getDriveInfo(String driveLetter) async {
-    // اطمینان حاصل می‌کنیم که فقط حرف درایو ارسال شود (مثلا C:)
     if (!driveLetter.endsWith(r':\')) return null;
     final deviceId = driveLetter.substring(0, 2);
 
     try {
-      // اجرای دستور WMIC
       final result = await Process.run('wmic', [
         'logicaldisk',
         'where',
@@ -28,10 +23,9 @@ class WindowsDriveService {
 
       if (result.exitCode != 0) {
         print('WMIC Error: ${result.stderr}');
-        return null; // دستور با خطا مواجه شد
+        return null;
       }
 
-      // پردازش خروجی متنی
       final stdout = result.stdout as String;
       final lines = stdout.trim().split('\n');
 
@@ -62,6 +56,6 @@ class WindowsDriveService {
       print('Failed to run WMIC process: $e');
     }
 
-    return null; // در صورت بروز هرگونه خطا
+    return null;
   }
 }
